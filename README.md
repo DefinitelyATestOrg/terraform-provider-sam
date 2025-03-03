@@ -3,7 +3,7 @@
 The [Sam Terraform provider](https://registry.terraform.io/providers/DefinitelyATestOrg/sam/latest/docs) provides convenient access to
 [the Sam REST API](https://docs.sam.com) from Terraform.
 
-It is generated with [Stainless](https://www.stainlessapi.com/).
+It is generated with [Stainless](https://www.stainless.com/).
 
 ## Requirements
 
