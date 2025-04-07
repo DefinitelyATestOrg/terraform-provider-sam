@@ -9,6 +9,7 @@ import (
 	"github.com/DefinitelyATestOrg/sam-go"
 	"github.com/DefinitelyATestOrg/sam-go/option"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -28,7 +29,7 @@ type SamProvider struct {
 // SamProviderModel describes the provider data model.
 type SamProviderModel struct {
 	BaseURL types.String `tfsdk:"base_url" json:"base_url,optional"`
-	APIKey  types.String `tfsdk:"api_key" json:"api_key,required"`
+	APIKey  types.String `tfsdk:"api_key" json:"api_key,optional"`
 }
 
 func (p *SamProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -44,7 +45,7 @@ func ProviderSchema(ctx context.Context) schema.Schema {
 				Optional:    true,
 			},
 			"api_key": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 			},
 		},
 	}
@@ -62,14 +63,23 @@ func (p *SamProvider) Configure(ctx context.Context, req provider.ConfigureReque
 
 	opts := []option.RequestOption{}
 
-	if !data.BaseURL.IsNull() {
+	if !data.BaseURL.IsNull() && !data.BaseURL.IsUnknown() {
 		opts = append(opts, option.WithBaseURL(data.BaseURL.ValueString()))
+	} else if o, ok := os.LookupEnv("SAM_BASE_URL"); ok {
+		opts = append(opts, option.WithBaseURL(o))
 	}
-	if o, ok := os.LookupEnv("API_KEY"); ok {
-		opts = append(opts, option.WithAPIKey(o))
-	}
-	if !data.APIKey.IsNull() {
+
+	if !data.APIKey.IsNull() && !data.APIKey.IsUnknown() {
 		opts = append(opts, option.WithAPIKey(data.APIKey.ValueString()))
+	} else if o, ok := os.LookupEnv("API_KEY"); ok {
+		opts = append(opts, option.WithAPIKey(o))
+	} else {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("api_key"),
+			"Missing api_key value",
+			"The api_key field is required. Set it in provider configuration or via the \"API_KEY\" environment variable.",
+		)
+		return
 	}
 
 	client := sam.NewClient(
