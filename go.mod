@@ -2,6 +2,8 @@ module github.com/DefinitelyATestOrg/terraform-provider-sam
 
 go 1.24.0
 
+toolchain go1.24.12
+
 require (
 	github.com/DefinitelyATestOrg/sam-go v0.1.0
 	github.com/davecgh/go-spew v1.1.1
