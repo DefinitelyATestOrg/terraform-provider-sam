@@ -4,6 +4,9 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+# Mark the necessary Go modules as private to avoid Go's proxy
+export GOPRIVATE="${GOPRIVATE:+$GOPRIVATE,}github.com/DefinitelyATestOrg/sam-go/v2,github.com/stainless-sdks/sam-go/v2"
+
 echo "==> Running Go build"
 go build ./...
 

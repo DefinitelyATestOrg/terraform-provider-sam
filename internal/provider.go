@@ -6,8 +6,8 @@ import (
 	"context"
 	"os"
 
-	"github.com/DefinitelyATestOrg/sam-go"
-	"github.com/DefinitelyATestOrg/sam-go/option"
+	"github.com/DefinitelyATestOrg/sam-go/v2"
+	"github.com/DefinitelyATestOrg/sam-go/v2/option"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"

@@ -3,7 +3,7 @@ module github.com/DefinitelyATestOrg/terraform-provider-sam
 go 1.24.0
 
 require (
-	github.com/DefinitelyATestOrg/sam-go v0.1.0
+	github.com/DefinitelyATestOrg/sam-go/v2 v2.0.0-beta.1
 	github.com/davecgh/go-spew v1.1.1
 	github.com/hashicorp/terraform-plugin-docs v0.24.0
 	github.com/hashicorp/terraform-plugin-framework v1.15.0
