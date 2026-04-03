@@ -4,10 +4,12 @@ package internal
 
 import (
 	"context"
+	"os"
 
-	"github.com/DefinitelyATestOrg/sam-node"
-	"github.com/DefinitelyATestOrg/sam-node/option"
+	"github.com/DefinitelyATestOrg/sam-go/v2"
+	"github.com/DefinitelyATestOrg/sam-go/v2/option"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -27,7 +29,7 @@ type SamProvider struct {
 // SamProviderModel describes the provider data model.
 type SamProviderModel struct {
 	BaseURL types.String `tfsdk:"base_url" json:"base_url,optional"`
-	APIKey  types.String `tfsdk:"api_key" json:"api_key,required"`
+	APIKey  types.String `tfsdk:"api_key" json:"api_key,optional"`
 }
 
 func (p *SamProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -39,11 +41,11 @@ func ProviderSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"base_url": schema.StringAttribute{
-				Description: "Set the base url that the provider connects to. This can be used for testing in other environments.",
+				Description: "Set the base url that the provider connects to.",
 				Optional:    true,
 			},
 			"api_key": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 			},
 		},
 	}
@@ -55,19 +57,29 @@ func (p *SamProvider) Schema(ctx context.Context, req provider.SchemaRequest, re
 
 func (p *SamProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 
-	// TODO(terraform): apiKey := os.Getenv("API_KEY")
-
 	var data SamProviderModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
 	opts := []option.RequestOption{}
 
-	if !data.BaseURL.IsNull() {
+	if !data.BaseURL.IsNull() && !data.BaseURL.IsUnknown() {
 		opts = append(opts, option.WithBaseURL(data.BaseURL.ValueString()))
+	} else if o, ok := os.LookupEnv("SAM_BASE_URL"); ok {
+		opts = append(opts, option.WithBaseURL(o))
 	}
-	if !data.APIKey.IsNull() {
+
+	if !data.APIKey.IsNull() && !data.APIKey.IsUnknown() {
 		opts = append(opts, option.WithAPIKey(data.APIKey.ValueString()))
+	} else if o, ok := os.LookupEnv("API_KEY"); ok {
+		opts = append(opts, option.WithAPIKey(o))
+	} else {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("api_key"),
+			"Missing api_key value",
+			"The api_key field is required. Set it in provider configuration or via the \"API_KEY\" environment variable.",
+		)
+		return
 	}
 
 	client := sam.NewClient(
